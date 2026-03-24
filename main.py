@@ -11,7 +11,7 @@ st.set_page_config(layout="wide")
 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from gemini_file import ask_gemini
+from gemini_file import ask_gemini, ask_groq
 
 from neo4j import GraphDatabase
 from pyvis.network import Network
@@ -39,6 +39,22 @@ st.markdown(
 tab1, tab2 = st.tabs(['Research Paper QA', "Knowledge Graph Explorer"])
 
 
+def ask_llm(content, query):
+    try:
+        
+        response=ask_gemini(content, query)
+
+    except Exception as gemini_error:
+        # log internally only
+        print("Gemini failed:", gemini_error)
+        
+        try:
+            response=ask_groq(content, query)
+        except Exception as grok_error:
+            print("Grok failed:", grok_error)
+            return "Failed to get response."
+    return response
+        
 # Tab 1-> RAG Research Paper Question Answering 
 
 with tab1:
@@ -100,8 +116,8 @@ with tab1:
         print("whole content",content )
         # Call Gemini
         with st.spinner("🤖 Analyzing research papers and generating insights..."):
-            response = ask_gemini(content, user_query)
-        print("gemini response", response)
+            response = ask_llm(content, user_query)
+        print("response", response)
         # -------------------------
         # Extract Answer and Paper
         # -------------------------
